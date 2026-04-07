@@ -1,0 +1,9 @@
+name = "worker-proxy"
+main = "src/index.js"
+compatibility_date = "2026-04-07"
+
+workers_dev = true
+
+[vars]
+PRIMARY_URL = "https://www.seomecards.com"
+SECONDARY_URL = "https://www-cf.seomecards.com"
