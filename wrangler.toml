@@ -6,5 +6,5 @@ compatibility_date = "2026-04-07"
 workers_dev = true
 
 [vars]
-PRIMARY_URL = "https://www.someecards.com"
+PRIMARY_URL = "https://www-cf-pages.someecards.com"
 SECONDARY_URL = "https://www-cf.someecards.com"

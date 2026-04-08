@@ -36,25 +36,18 @@ async function handleMirror(originalRequest, primaryRes, primaryDuration, second
     const secondaryDuration = Date.now() - secondaryStart
     const delta = secondaryDuration - primaryDuration
 
-    log({
-      type: "timing_comparison",
-      url: originalRequest.url,
-      method: originalRequest.method,
-      primary_duration_ms: primaryDuration,
-      secondary_duration_ms: secondaryDuration,
-      delta_ms: delta
-    })
-
     if (delta > 300) {
       log({
         type: "secondary_slower",
         url: originalRequest.url,
         method: originalRequest.method,
+        primary_duration_ms: primaryDuration,
+        secondary_duration_ms: secondaryDuration,
         delta_ms: delta
       })
     }
 
-    if (!secondaryRes.ok) {
+    if (!secondaryRes.ok && secondaryRes.status !== 304) {
       log({
         type: "secondary_error",
         status: secondaryRes.status,
@@ -62,7 +55,7 @@ async function handleMirror(originalRequest, primaryRes, primaryDuration, second
       })
     }
 
-    if (primaryRes.status !== secondaryRes.status) {
+    if (primaryRes.status !== secondaryRes.status && secondaryRes.status !== 304) {
       log({
         type: "status_mismatch",
         url: originalRequest.url,
@@ -81,9 +74,22 @@ async function handleMirror(originalRequest, primaryRes, primaryDuration, second
 }
 
 function log(data) {
-  console.error(JSON.stringify({
+  const base = {
     source: "worker-proxy",
     timestamp: new Date().toISOString(),
     ...data
-  }))
+  }
+
+  // Route logs by severity
+  if (
+    data.type === "secondary_error" ||
+    data.type === "secondary_failure" ||
+    data.type === "status_mismatch"
+  ) {
+    console.error(JSON.stringify(base))   // real errors
+  } else if (data.type === "secondary_slower") {
+    console.warn(JSON.stringify(base))    // warnings
+  } else {
+    console.log(JSON.stringify(base))     // normal info
+  }
 }
