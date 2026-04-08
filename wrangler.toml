@@ -1,4 +1,5 @@
-name = "worker-proxy"
+# wrangler.toml
+name = 'proxy-replicator'
 main = "src/index.js"
 compatibility_date = "2026-04-07"
 
