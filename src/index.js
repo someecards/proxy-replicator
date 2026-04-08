@@ -25,7 +25,7 @@ export default {
 
 function shouldMirror(pathname) {
   // Bot sites may generate unique Next.js asset filenames, so ignore this folder.
-  return !pathname.startsWith("/_next/static/")
+  return !pathname.startsWith("/_next/") || pathname.startsWith("/favicons/")
 }
 
 async function handleMirror(originalRequest, primaryRes, primaryDuration, secondaryReq) {
