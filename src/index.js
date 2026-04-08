@@ -8,17 +8,24 @@ export default {
     const primaryReq = new Request(PRIMARY + url.pathname + url.search, request)
     const secondaryReq = new Request(SECONDARY + url.pathname + url.search, request)
 
-    // ⏱ Measure primary
+    // Measure primary latency before optionally mirroring the request.
     const primaryStart = Date.now()
     const primaryRes = await fetch(primaryReq)
     const primaryDuration = Date.now() - primaryStart
 
-    ctx.waitUntil(
-      handleMirror(request, primaryRes, primaryDuration, secondaryReq)
-    )
+    if (!shouldMirror(url.pathname)) {
+      return primaryRes
+    }
+
+    ctx.waitUntil(handleMirror(request, primaryRes, primaryDuration, secondaryReq))
 
     return primaryRes
   }
+}
+
+function shouldMirror(pathname) {
+  // Bot sites may generate unique Next.js asset filenames, so ignore this folder.
+  return !pathname.startsWith("/_next/static/")
 }
 
 async function handleMirror(originalRequest, primaryRes, primaryDuration, secondaryReq) {

@@ -1,0 +1,21 @@
+services:
+  nextjs:
+    build:
+      context: .
+    working_dir: /usr/app
+    command: sh -c "chown -R node:node /usr/app /usr/app/node_modules && su node -s /bin/sh -c 'npm ci && npm run dev'"
+    volumes:
+      - ./:/usr/app:rw
+      - node_modules:/usr/app/node_modules:rw
+    ports:
+      - '3000:3000'
+    networks:
+      - someecards
+
+networks:
+  someecards:
+    name: someecards_someecards
+    external: true
+
+volumes:
+  node_modules:
