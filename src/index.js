@@ -46,8 +46,10 @@ async function handleMirror(originalRequest, primaryRes, primaryDuration, second
         delta_ms: delta
       })
     }
+  
+    const isRedirectStatus = secondaryRes.status === 304 || secondaryRes.status === 308
 
-    if (!secondaryRes.ok && secondaryRes.status !== 304) {
+    if (!secondaryRes.ok && !isRedirectStatus) {
       log({
         type: "secondary_error",
         status: secondaryRes.status,
@@ -55,7 +57,7 @@ async function handleMirror(originalRequest, primaryRes, primaryDuration, second
       })
     }
 
-    if (primaryRes.status !== secondaryRes.status && secondaryRes.status !== 304) {
+    if (primaryRes.status !== secondaryRes.status && !isRedirectStatus) {
       log({
         type: "status_mismatch",
         url: originalRequest.url,
