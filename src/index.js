@@ -70,7 +70,7 @@ async function handleMirror(originalRequest, primaryRes, primaryClone, primaryDu
     }
 
     // Only investigate when there is a problem
-    if (primaryRes.status > 500 || primaryRes.status !== secondaryRes.status) {
+    if (primaryRes.status > 500 || primaryRes.status != 304 && primaryRes.status !== secondaryRes.status) {
 
       let primaryBodyPreview = null
 
