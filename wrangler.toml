@@ -8,3 +8,19 @@ workers_dev = true
 [vars]
 PRIMARY_URL = "https://www-cf-pages.someecards.com"
 SECONDARY_URL = "https://www-cf.someecards.com"
+PRIMARY_BODY_DEBUG = true
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
