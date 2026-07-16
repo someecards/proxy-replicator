@@ -13,11 +13,11 @@ export default {
     const primaryRes = await fetch(primaryReq)
     const primaryDuration = Date.now() - primaryStart
 
-    if (!shouldMirror(url.pathname)) {
+    if (!shouldMirror(url.pathname, primaryRes)) {
       return primaryRes
     }
 
-    // 👇 clone BEFORE passing further
+    // 👇 clone BEFORE passing furtherv
     const primaryClone = env.PRIMARY_BODY_DEBUG && primaryRes.status >= 500 ? primaryRes.clone() : null
 
     ctx.waitUntil(
@@ -28,9 +28,10 @@ export default {
   }
 }
 
-function shouldMirror(pathname) {
+function shouldMirror(pathname, primaryRes) {
   // Bot sites may generate unique Next.js asset filenames, so ignore this folder.
-  return !pathname.startsWith("/_next/") && !pathname.startsWith("/favicons/") && !pathname.startsWith("/.well-known/")
+  const isNotStatic = !pathname.startsWith("/_next/") && !pathname.startsWith("/favicons/") && !pathname.startsWith("/.well-known/")
+  return isNotStatic && primaryRes && (primaryRes.status >= 500 || primaryRes.status == 404)
 }
 
 async function handleMirror(originalRequest, primaryRes, primaryClone, primaryDuration, secondaryReq, isDebugBody) {
