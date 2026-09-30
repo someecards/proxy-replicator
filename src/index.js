@@ -1,6 +1,54 @@
+import { detectBot, isTestSite, shouldBypassBotCheck } from "./bot-detector.js"
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
+    const onTestSite = isTestSite(url.hostname, env.TEST_HOSTNAME)
+
+    if (onTestSite) {
+      // 1. Intercept /robots.txt on test site
+      if (url.pathname === "/robots.txt") {
+        return new Response("User-agent: *\nDisallow: /\n", {
+          status: 200,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+            "X-Robots-Tag": "noindex, nofollow, noarchive",
+            "Cache-Control": "public, max-age=86400"
+          }
+        })
+      }
+
+      // 2. Check for bypass header
+      const bypassed = shouldBypassBotCheck(request, env)
+      if (bypassed) {
+        log({
+          type: "bot_check_bypassed",
+          url: request.url,
+          user_agent: request.headers.get("user-agent") || "",
+          method: request.method
+        })
+      } else {
+        // 3. Block bots and crawlers
+        const botCheck = detectBot(request)
+        if (botCheck.isBot) {
+          log({
+            type: "bot_blocked",
+            url: request.url,
+            reason: botCheck.reason,
+            user_agent: request.headers.get("user-agent") || "",
+            method: request.method
+          })
+
+          return new Response("Access denied: Bots and crawlers are not allowed on this testing domain.\n", {
+            status: 403,
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8",
+              "X-Robots-Tag": "noindex, nofollow, noarchive"
+            }
+          })
+        }
+      }
+    }
 
     const PRIMARY = env.PRIMARY_URL
     const SECONDARY = env.SECONDARY_URL
@@ -14,7 +62,7 @@ export default {
     const primaryDuration = Date.now() - primaryStart
 
     if (!shouldMirror(url.pathname, primaryRes)) {
-      return primaryRes
+      return onTestSite ? addRobotsHeader(primaryRes) : primaryRes
     }
 
     // 👇 clone BEFORE passing furtherv
@@ -24,8 +72,18 @@ export default {
       handleMirror(request, primaryRes, primaryClone, primaryDuration, secondaryReq, env.PRIMARY_BODY_DEBUG)
     )
 
-    return primaryRes
+    return onTestSite ? addRobotsHeader(primaryRes) : primaryRes
   }
+}
+
+function addRobotsHeader(response) {
+  const headers = new Headers(response.headers)
+  headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet")
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  })
 }
 
 function shouldMirror(pathname, primaryRes) {

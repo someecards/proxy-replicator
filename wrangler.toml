@@ -9,6 +9,7 @@ workers_dev = true
 PRIMARY_URL = "https://www-cf-pages.someecards.com"
 SECONDARY_URL = "https://www-cf.someecards.com"
 PRIMARY_BODY_DEBUG = true
+TEST_HOSTNAME = "proxy.someecards.com"
 
 [observability]
 enabled = false
